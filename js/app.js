@@ -1231,19 +1231,28 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCurrentView();
 });
 // ==========================================
-// SINCRONIZACIÓN AUTOMÁTICA (PC Y CELULAR)
+// SINCRONIZACIÓN AUTO-REFRESCO (PC Y CELULAR)
 // ==========================================
-// Sincronización automática al abrir, desbloquear el teléfono o volver a la app
-window.addEventListener("focus", () => {
+
+async function autoSyncAndRender() {
   if (navigator.onLine && typeof syncWithSheets === "function") {
-    syncWithSheets(true);
+    // 1. Descarga los datos de Google Sheets
+    await syncWithSheets(true);
+    // 2. Fuerza el rediseño de la pantalla actual para mostrar los cambios de inmediato
+    if (typeof renderCurrentView === "function") {
+      renderCurrentView();
+    }
   }
-});
+}
+
+// Se ejecuta automáticamente al enfocar o abrir la App en el celular / PC
+window.addEventListener("focus", autoSyncAndRender);
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    if (navigator.onLine && typeof syncWithSheets === "function") {
-      syncWithSheets(true);
-    }
+    autoSyncAndRender();
   }
 });
+
+// Revisa cambios en segundo plano cada 15 segundos mientras la App esté abierta
+setInterval(autoSyncAndRender, 15000);
