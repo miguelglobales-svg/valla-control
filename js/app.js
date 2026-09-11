@@ -1231,38 +1231,35 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCurrentView();
 });
 // ==========================================
-// AUTO-GUARDADO E INTEGRACIÓN EN TIEMPO REAL
+// AUTO-SINCRONIZACIÓN USANDO EL BOTÓN REAL
 // ==========================================
 
-// 1. Enviar a Sheets inmediatamente al guardar cualquier registro
-async function saveAndSyncImmediate(type, data) {
-  // Guardar en memoria local primero
-  if (typeof saveLocalData === "function") await saveLocalData();
+async function ejecutarSincronizacionTotal() {
+  if (!navigator.onLine) return;
   
-  // Enviar directamente a Google Sheets
-  if (navigator.onLine && typeof syncWithSheets === "function") {
-    await syncWithSheets(true);
+  // Buscamos el botón real de sincronizar en el DOM
+  const btnSync = document.getElementById("btn-sync") || document.querySelector("[onclick*='syncWithSheets']");
+  
+  if (btnSync) {
+    // Si el botón existe en la vista actual, simulamos el clic físico
+    btnSync.click();
+  } else if (typeof syncWithSheets === "function") {
+    // Si no está el botón visible en pantalla, ejecutamos la función directa sin silenciar
+    await syncWithSheets(false);
+    if (typeof renderCurrentView === "function") renderCurrentView();
   }
 }
 
-// 2. Consulta automática cada vez que la pantalla vuelve a estar activa
-async function checkAndRefresh() {
-  if (navigator.onLine && typeof fetchFromSheets === "function") {
-    const scriptUrl = localStorage.getItem("valla_script_url");
-    if (!scriptUrl) return;
-    
-    await fetchFromSheets();
-    if (typeof renderCurrentView === "function") {
-      renderCurrentView();
-    }
-  }
-}
+// 1. Ejecutar automáticamente 1.5 segundos después de abrir la PWA
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(ejecutarSincronizacionTotal, 1500);
+});
 
-// Detecta cuándo abres la app, desbloqueas el cel o cambias de pestaña
+// 2. Ejecutar cada vez que el celular/PC vuelva a la app (desbloquear pantalla o cambiar pestaña)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    checkAndRefresh();
+    ejecutarSincronizacionTotal();
   }
 });
 
-window.addEventListener("focus", checkAndRefresh);
+window.addEventListener("focus", ejecutarSincronizacionTotal);
