@@ -1231,41 +1231,38 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCurrentView();
 });
 // ==========================================
-// SINCRONIZACIÓN AUTOMÁTICA OBLIGATORIA
+// AUTO-GUARDADO E INTEGRACIÓN EN TIEMPO REAL
 // ==========================================
 
-async function forceAutoSync() {
-  if (!navigator.onLine) return;
-
-  // 1. Asegurar que la URL de Apps Script esté cargada desde localStorage
-  const scriptUrl = localStorage.getItem("valla_script_url");
-  if (!scriptUrl) return;
-
-  try {
-    // 2. Traer datos directamente desde Google Sheets
-    if (typeof fetchFromSheets === "function") {
-      await fetchFromSheets();
-      
-      // 3. Rediseñar la vista actual con los datos nuevos
-      if (typeof renderCurrentView === "function") {
-        renderCurrentView();
-      }
-    }
-  } catch (err) {
-    console.warn("Auto-sync en segundo plano falló:", err);
+// 1. Enviar a Sheets inmediatamente al guardar cualquier registro
+async function saveAndSyncImmediate(type, data) {
+  // Guardar en memoria local primero
+  if (typeof saveLocalData === "function") await saveLocalData();
+  
+  // Enviar directamente a Google Sheets
+  if (navigator.onLine && typeof syncWithSheets === "function") {
+    await syncWithSheets(true);
   }
 }
 
-// Ejecutar automáticamente apenas abre la app
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(forceAutoSync, 1000);
-});
+// 2. Consulta automática cada vez que la pantalla vuelve a estar activa
+async function checkAndRefresh() {
+  if (navigator.onLine && typeof fetchFromSheets === "function") {
+    const scriptUrl = localStorage.getItem("valla_script_url");
+    if (!scriptUrl) return;
+    
+    await fetchFromSheets();
+    if (typeof renderCurrentView === "function") {
+      renderCurrentView();
+    }
+  }
+}
 
-// Ejecutar al volver a abrir la app o cambiar de pestaña
+// Detecta cuándo abres la app, desbloqueas el cel o cambias de pestaña
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    forceAutoSync();
+    checkAndRefresh();
   }
 });
 
-window.addEventListener("focus", forceAutoSync);
+window.addEventListener("focus", checkAndRefresh);
