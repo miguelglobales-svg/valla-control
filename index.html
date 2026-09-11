@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Control de Vallas Publicitarias | PWA</title>
+  
+  <!-- Configuración PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vallas Control">
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
+  <link rel="apple-touch-icon" href="./icons/icon.svg">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Estilos complementarios -->
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased selection:bg-blue-600 selection:text-white pb-20 md:pb-6">
+
+  <!-- Header Superior -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 sm:px-6">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <!-- Logo y Título -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/20 p-2 border border-blue-400/30">
+          <img src="./icons/icon.svg" alt="Logo" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+            VALLAS CONTROL
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">SV</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">Gestión de Alquiler & Google Sheets</p>
+        </div>
+      </div>
+
+      <!-- Acciones de Cabecera -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Banner de instalación PWA -->
+        <button id="pwa-install-btn" class="hidden px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 flex items-center gap-1.5 transition">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Instalar App</span>
+        </button>
+
+        <!-- Navegación Escritorio (Visible en md+) -->
+        <nav class="hidden md:flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 text-xs font-semibold">
+          <button data-nav="dashboard" class="px-3.5 py-1.5 rounded-lg text-white bg-blue-600 flex items-center gap-1.5 transition">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+          </button>
+          <button data-nav="vallas" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 transition">
+            <i data-lucide="image" class="w-4 h-4"></i> Vallas
+          </button>
+          <button data-nav="contratos" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 transition">
+            <i data-lucide="file-signature" class="w-4 h-4"></i> Contratos
+          </button>
+          <button data-nav="clientes" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 transition">
+            <i data-lucide="users" class="w-4 h-4"></i> Clientes
+          </button>
+          <button data-nav="configuracion" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:bg-slate-800 flex items-center gap-1.5 transition">
+            <i data-lucide="settings" class="w-4 h-4"></i> Ajustes
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal de la App -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- ==================================================== -->
+    <!-- 1. VISTA DASHBOARD -->
+    <!-- ==================================================== -->
+    <section id="view-dashboard" class="space-y-6">
+      <!-- Banner de Alerta de 15 días (aparece dinámicamente) -->
+      <div id="dashboard-alerts-container" class="hidden">
+        <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 sm:p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2.5 text-amber-400">
+              <span class="p-2 bg-amber-500/20 rounded-xl">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              </span>
+              <div>
+                <h3 class="font-bold text-sm sm:text-base text-amber-200">Avisos de Vencimiento de Contrato</h3>
+                <p class="text-xs text-amber-400/80">Contratos que vencen en los próximos 15 días</p>
+              </div>
+            </div>
+            <span class="text-xs px-2.5 py-1 bg-amber-500/30 text-amber-300 font-bold rounded-lg">
+              Atención Inmediata
+            </span>
+          </div>
+          <!-- Lista de contratos en alerta -->
+          <div id="dashboard-alerts-list" class="space-y-2 mt-3"></div>
+        </div>
+      </div>
+
+      <!-- Tarjetas Métricas -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <!-- Total Vallas -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold">Total Vallas</span>
+            <i data-lucide="layers" class="w-4 h-4 text-blue-400"></i>
+          </div>
+          <p id="metric-total-vallas" class="text-2xl font-black text-white">0</p>
+        </div>
+
+        <!-- Vallas Alquiladas -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold">Alquiladas</span>
+            <i data-lucide="check-circle" class="w-4 h-4 text-indigo-400"></i>
+          </div>
+          <p id="metric-vallas-alquiladas" class="text-2xl font-black text-indigo-400">0</p>
+        </div>
+
+        <!-- Vallas Disponibles -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold">Disponibles</span>
+            <i data-lucide="sun" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <p id="metric-vallas-disponibles" class="text-2xl font-black text-emerald-400">0</p>
+        </div>
+
+        <!-- Contratos Activos -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold">Contratos</span>
+            <i data-lucide="file-check" class="w-4 h-4 text-sky-400"></i>
+          </div>
+          <p id="metric-contratos-activos" class="text-2xl font-black text-sky-400">0</p>
+        </div>
+
+        <!-- Alertas 15 Días -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold">Por Vencer</span>
+            <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <p id="metric-alertas-15" class="text-2xl font-black text-amber-400">0</p>
+        </div>
+
+        <!-- Facturación Mensual -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+          <div class="flex items-center justify-between text-slate-400 mb-2">
+            <span class="text-xs font-semibold">Ingresos Mes</span>
+            <i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <p id="metric-ingresos" class="text-xl sm:text-2xl font-black text-emerald-400">$0.00</p>
+        </div>
+      </div>
+
+      <!-- Barra de Estado de Ocupación -->
+      <div class="bg-slate-900/80 border border-slate-800 p-4 sm:p-5 rounded-2xl">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Tasa de Ocupación de Vallas</span>
+          <span id="metric-ocupacion-pct" class="text-xs font-bold text-blue-400">0%</span>
+        </div>
+        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+          <div id="metric-ocupacion-bar" class="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Acciones Rápidas -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <button id="btn-quick-new-valla" onclick="document.getElementById('btn-new-valla').click()" class="p-4 bg-gradient-to-br from-slate-900 to-slate-800 hover:from-slate-850 hover:to-slate-750 border border-slate-700/80 rounded-2xl flex items-center gap-3 group transition shadow">
+          <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          </div>
+          <div class="text-left">
+            <h4 class="text-sm font-bold text-white">Registrar Valla</h4>
+            <p class="text-xs text-slate-400">Medidas, foto y ubicación</p>
+          </div>
+        </button>
+
+        <button id="btn-quick-new-contrato" onclick="document.getElementById('btn-new-contrato').click()" class="p-4 bg-gradient-to-br from-slate-900 to-slate-800 hover:from-slate-850 hover:to-slate-750 border border-slate-700/80 rounded-2xl flex items-center gap-3 group transition shadow">
+          <div class="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition">
+            <i data-lucide="file-plus" class="w-5 h-5"></i>
+          </div>
+          <div class="text-left">
+            <h4 class="text-sm font-bold text-white">Nuevo Contrato</h4>
+            <p class="text-xs text-slate-400">Con cálculo de IVA 13% y Renta 10%</p>
+          </div>
+        </button>
+
+        <button id="btn-quick-new-cliente" onclick="document.getElementById('btn-new-cliente').click()" class="p-4 bg-gradient-to-br from-slate-900 to-slate-800 hover:from-slate-850 hover:to-slate-750 border border-slate-700/80 rounded-2xl flex items-center gap-3 group transition shadow">
+          <div class="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+          </div>
+          <div class="text-left">
+            <h4 class="text-sm font-bold text-white">Nuevo Cliente</h4>
+            <p class="text-xs text-slate-400">Teléfono y notas de contacto</p>
+          </div>
+        </button>
+      </div>
+
+      <!-- Vallas Destacadas -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i data-lucide="image" class="w-4 h-4 text-blue-400"></i> Catálogo de Vallas
+          </h3>
+          <button onclick="document.querySelector('[data-nav=\'vallas\']').click()" class="text-xs text-blue-400 hover:underline font-semibold flex items-center gap-1">
+            Ver todas <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <div id="dashboard-recent-vallas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- 2. VISTA VALLAS -->
+    <!-- ==================================================== -->
+    <section id="view-vallas" class="hidden space-y-6">
+      <!-- Cabecera de Sección -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-white tracking-tight">Vallas Publicitarias</h2>
+          <p class="text-xs text-slate-400">Control de espacios, medidas, fotos y disponibilidad</p>
+        </div>
+
+        <button id="btn-new-valla" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition self-start sm:self-auto">
+          <i data-lucide="plus" class="w-4 h-4"></i> Nueva Valla
+        </button>
+      </div>
+
+      <!-- Barra de Filtros y Búsqueda -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+        <!-- Buscador -->
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input id="search-valla-input" type="text" placeholder="Buscar por dirección o código..." 
+                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <!-- Pestañas de Estado -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+          <button data-valla-filter="all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white transition">Todas</button>
+          <button data-valla-filter="disponible" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 transition">Disponibles</button>
+          <button data-valla-filter="alquilada" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 transition">Alquiladas</button>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Vallas -->
+      <div id="vallas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- 3. VISTA CLIENTES -->
+    <!-- ==================================================== -->
+    <section id="view-clientes" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-white tracking-tight">Directorio de Clientes</h2>
+          <p class="text-xs text-slate-400">Contactos, teléfonos para WhatsApp y notas</p>
+        </div>
+
+        <button id="btn-new-cliente" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition self-start sm:self-auto">
+          <i data-lucide="user-plus" class="w-4 h-4"></i> Nuevo Cliente
+        </button>
+      </div>
+
+      <!-- Buscador -->
+      <div class="bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input id="search-client-input" type="text" placeholder="Buscar cliente por nombre o teléfono..." 
+                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+        </div>
+      </div>
+
+      <!-- Lista de Clientes -->
+      <div id="clientes-list" class="space-y-3"></div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- 4. VISTA CONTRATOS -->
+    <!-- ==================================================== -->
+    <section id="view-contratos" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-white tracking-tight">Contratos de Alquiler</h2>
+          <p class="text-xs text-slate-400">Facturación con 13% IVA, 10% Renta, tiempo extra y alerta de 15 días</p>
+        </div>
+
+        <button id="btn-new-contrato" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition self-start sm:self-auto">
+          <i data-lucide="file-plus" class="w-4 h-4"></i> Nuevo Contrato
+        </button>
+      </div>
+
+      <!-- Barra de Filtros y Búsqueda -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+        <!-- Buscador -->
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input id="search-contrato-input" type="text" placeholder="Buscar por cliente, valla o teléfono..." 
+                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <!-- Filtros de Contratos -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto no-scrollbar">
+          <button data-contrato-filter="all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white transition whitespace-nowrap">Todos</button>
+          <button data-contrato-filter="activos" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 transition whitespace-nowrap">Activos</button>
+          <button data-contrato-filter="alertas" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 transition whitespace-nowrap">⚠️ Por Vencer (&le;15d)</button>
+          <button data-contrato-filter="vencidos" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 transition whitespace-nowrap">Vencidos</button>
+        </div>
+      </div>
+
+      <!-- Lista de Contratos -->
+      <div id="contratos-list" class="space-y-4"></div>
+    </section>
+
+    <!-- ==================================================== -->
+    <!-- 5. VISTA CONFIGURACIÓN -->
+    <!-- ==================================================== -->
+    <section id="view-configuracion" class="hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-black text-white tracking-tight">Configuración y Google Sheets</h2>
+        <p class="text-xs text-slate-400">Enlace con tu hoja de cálculo y Google Drive sin pagar nada</p>
+      </div>
+
+      <!-- Tarjeta de Estado de Conexión -->
+      <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i data-lucide="database" class="w-4 h-4 text-blue-400"></i> Conexión de Datos
+          </h3>
+          <div id="cfg-connection-status"></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">URL de Aplicación Web de Google Apps Script:</label>
+          <input id="cfg-script-url" type="url" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono">
+          <p class="text-[11px] text-slate-400 mt-1">Pega aquí la URL que obtienes al "Implementar como aplicación web" en Google Apps Script.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-2">
+          <button id="btn-save-cfg" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-4 h-4"></i> Guardar URL
+          </button>
+          <button id="btn-test-connection" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5 border border-slate-700">
+            <i data-lucide="activity" class="w-4 h-4"></i> Probar Conexión
+          </button>
+          <button id="btn-sync-now" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5 border border-slate-700">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sincronizar Ahora
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-400 pt-2 border-t border-slate-800">
+          Última sincronización: <span id="cfg-last-sync" class="font-semibold text-slate-200">Nunca</span>
+        </p>
+      </div>
+
+      <!-- Guía rápida de configuración -->
+      <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="help-circle" class="w-4 h-4 text-emerald-400"></i> ¿Cómo configurar tu Google Sheets y Drive en 3 minutos?
+        </h3>
+        <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+          <li>Crea una nueva hoja de cálculo en <strong class="text-white">Google Sheets</strong> (gratis).</li>
+          <li>En el menú superior, ve a <strong class="text-white">Extensiones &gt; Apps Script</strong>.</li>
+          <li>Copia todo el código del archivo <strong class="text-blue-400">google-apps-script/Code.gs</strong> de este proyecto y pégalo allí.</li>
+          <li>Haz clic en <strong class="text-white">Implementar &gt; Nueva implementación</strong>.</li>
+          <li>Selecciona tipo <strong class="text-white">Aplicación web</strong>, ejecuta como "Yo" y en <strong class="text-amber-400">Quién tiene acceso: "Cualquiera"</strong>.</li>
+          <li>Copia el enlace de la aplicación web terminado en <strong class="text-mono text-blue-400">/exec</strong> y pégalo en el recuadro superior. ¡Listo! Las hojas y la carpeta de Google Drive se crearán solas automáticamente.</li>
+        </ol>
+      </div>
+
+      <!-- Herramientas de respaldo local -->
+      <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl space-y-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="hard-drive" class="w-4 h-4 text-purple-400"></i> Respaldo y Datos Locales
+        </h3>
+        <p class="text-xs text-slate-400">Puedes descargar una copia de seguridad en JSON de tus clientes, vallas y contratos en cualquier momento.</p>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button id="btn-export-backup" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5 border border-slate-700">
+            <i data-lucide="download" class="w-4 h-4"></i> Descargar Copia de Seguridad JSON
+          </button>
+          <button id="btn-reset-demo" class="px-3 py-2 bg-red-950/40 hover:bg-red-900/50 text-red-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5 border border-red-800/40">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restablecer Datos de Demostración
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================================================== -->
+  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVIL (PWA STYLE) -->
+  <!-- ==================================================== -->
+  <nav id="bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 py-2 px-3 flex justify-around items-center text-[10px] font-semibold">
+    <button data-nav="dashboard" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-white bg-blue-600 transition">
+      <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+      <span>Inicio</span>
+    </button>
+    <button data-nav="vallas" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-400 hover:text-white transition">
+      <i data-lucide="image" class="w-4 h-4"></i>
+      <span>Vallas</span>
+    </button>
+    <button data-nav="contratos" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-400 hover:text-white transition">
+      <i data-lucide="file-signature" class="w-4 h-4"></i>
+      <span>Contratos</span>
+    </button>
+    <button data-nav="clientes" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-400 hover:text-white transition">
+      <i data-lucide="users" class="w-4 h-4"></i>
+      <span>Clientes</span>
+    </button>
+    <button data-nav="configuracion" class="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-400 hover:text-white transition">
+      <i data-lucide="settings" class="w-4 h-4"></i>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
+  <!-- ==================================================== -->
+  <!-- MODAL: CLIENTE -->
+  <!-- ==================================================== -->
+  <div id="modal-cliente" class="modal-container hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between p-4 border-b border-slate-800">
+        <h3 id="cliente-modal-title" class="font-bold text-white text-base">Nuevo Cliente</h3>
+        <button data-close-modal class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-cliente" class="p-4 space-y-3.5">
+        <input type="hidden" id="cliente-id">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo o Empresa *</label>
+          <input id="cliente-nombre" type="text" required placeholder="Ej. Distribuidora Central S.A." 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Número de Teléfono (WhatsApp)</label>
+          <input id="cliente-telefono" type="tel" placeholder="Ej. +503 7123-4567 o 71234567" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Notas del Cliente</label>
+          <textarea id="cliente-notas" rows="3" placeholder="Información de contacto, acuerdos de pago, etc." 
+                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" data-close-modal class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Guardar Cliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- MODAL: VALLA -->
+  <!-- ==================================================== -->
+  <div id="modal-valla" class="modal-container hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl my-8">
+      <div class="flex items-center justify-between p-4 border-b border-slate-800">
+        <h3 id="valla-modal-title" class="font-bold text-white text-base">Valla Publicitaria</h3>
+        <button data-close-modal class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-valla" class="p-4 sm:p-5 space-y-4">
+        <input type="hidden" id="valla-id">
+        <input type="hidden" id="valla-foto-url">
+        <input type="hidden" id="valla-drive-id">
+
+        <!-- Fotografía con Cámara / Subida a Drive -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Fotografía de la Valla (Google Drive)</label>
+          <div class="flex flex-col sm:flex-row gap-3 items-center">
+            <div class="w-full sm:w-36 h-28 bg-slate-950 rounded-xl border border-slate-700 overflow-hidden flex items-center justify-center relative">
+              <img id="valla-preview-img" src="./icons/icon.svg" alt="Preview" class="w-full h-full object-cover">
+              <div id="valla-photo-loading" class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center text-blue-400 text-xs font-semibold">
+                <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+              </div>
+            </div>
+
+            <div class="flex-1 w-full space-y-2">
+              <label class="block w-full cursor-pointer px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-center text-xs font-semibold text-slate-200 transition">
+                <i data-lucide="camera" class="w-4 h-4 inline-block mr-1 text-blue-400"></i> Tomar Foto / Elegir Imagen
+                <input id="valla-foto-input" type="file" accept="image/*" capture="environment" class="hidden">
+              </label>
+              <p class="text-[11px] text-slate-500">Se comprimirá automáticamente y se guardará en tu Google Drive.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Dirección / Ubicación Física *</label>
+          <input id="valla-direccion" type="text" required placeholder="Ej. Alameda Roosevelt y 49 Av. Sur, San Salvador" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Ancho (metros) *</label>
+            <input id="valla-ancho" type="number" step="0.1" min="0.5" required placeholder="Ej. 8.5" 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Alto (metros) *</label>
+            <input id="valla-alto" type="number" step="0.1" min="0.5" required placeholder="Ej. 4.0" 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+          <i data-lucide="info" class="w-4 h-4 text-blue-400 shrink-0"></i>
+          <span>El código correlativo se asigna automáticamente (1, 2, 3...) y el estado ("Disponible" o "Alquilada") se actualiza según los contratos activos.</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Notas adicionales</label>
+          <textarea id="valla-notas" rows="2" placeholder="Orientación vehicular, iluminación, puntos de referencia, etc." 
+                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" data-close-modal class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Guardar Valla</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- MODAL: CONTRATO (CON IMPUESTOS DE EL SALVADOR) -->
+  <!-- ==================================================== -->
+  <div id="modal-contrato" class="modal-container hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl my-6">
+      <div class="flex items-center justify-between p-4 border-b border-slate-800">
+        <h3 id="contrato-modal-title" class="font-bold text-white text-base">Nuevo Contrato de Alquiler</h3>
+        <button data-close-modal class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-contrato" class="p-4 sm:p-6 space-y-4">
+        <input type="hidden" id="contrato-id">
+
+        <!-- Selección de Cliente -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-300">Cliente *</label>
+            <button type="button" id="btn-quick-new-client" class="text-xs text-blue-400 hover:underline font-bold flex items-center gap-1">
+              <i data-lucide="plus" class="w-3 h-3"></i> Crear nuevo cliente
+            </button>
+          </div>
+          <select id="contrato-cliente-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+        </div>
+
+        <!-- Selección de Valla -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Valla Publicitaria Asignada *</label>
+          <select id="contrato-valla-select" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+        </div>
+
+        <!-- Tipo de Servicio -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de Servicio *</label>
+            <select id="contrato-tipo-servicio" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              <option value="Solo alquiler">Solo alquiler de espacio</option>
+              <option value="Alquiler con publicidad">Alquiler con publicidad (incluye lona/instalación)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Estado del Contrato</label>
+            <select id="contrato-estado" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              <option value="Activo">Activo</option>
+              <option value="Vencido">Vencido / Finalizado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Precios y Duración -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Precio Mensual ($ USD) *</label>
+            <input id="contrato-precio-mensual" type="number" step="0.01" min="1" required placeholder="Ej. 650.00" 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Cantidad de Meses *</label>
+            <input id="contrato-meses" type="number" min="1" required value="1" 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <!-- Fechas Editables -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha de Inicio *</label>
+            <input id="contrato-fecha-inicio" type="date" required 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha de Fin (Editable) *</label>
+            <input id="contrato-fecha-fin" type="date" required 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <!-- Tiempo Extra Gratis -->
+        <div class="bg-slate-950/60 border border-slate-800 p-3.5 rounded-xl space-y-2">
+          <label class="block text-xs font-bold text-emerald-400">🎁 Incluye Tiempo Extra Gratis (Cortesía)</label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <span class="text-[11px] text-slate-400 block mb-1">Meses extra:</span>
+              <input id="contrato-extra-meses" type="number" min="0" value="0" 
+                     class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 block mb-1">Días extra:</span>
+              <input id="contrato-extra-dias" type="number" min="0" value="0" 
+                     class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- CÁLCULOS EN TIEMPO REAL - IMPUESTOS DE EL SALVADOR -->
+        <div class="bg-gradient-to-br from-slate-950 to-blue-950/40 border border-blue-900/50 p-4 rounded-xl space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center justify-between">
+            <span>Liquidación Fiscal de El Salvador</span>
+            <span class="text-[10px] font-normal text-slate-400">Cálculo en tiempo real</span>
+          </h4>
+
+          <div class="space-y-1.5 text-xs pt-1 border-t border-slate-800">
+            <div class="flex justify-between text-slate-400">
+              <span>Precio SubTotal (base):</span>
+              <span id="calc-subtotal" class="font-semibold text-slate-200">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>IVA (13% sobre el subtotal):</span>
+              <span id="calc-iva" class="font-semibold text-blue-400">+$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-300 font-medium">
+              <span>Precio SubTotal con IVA Incluido:</span>
+              <span id="calc-subtotal-iva">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>
+                Renta retenida (10% sobre subtotal base):
+                <span class="block text-[10px] text-amber-400/70 mt-0.5">El cliente retiene y paga al Ministerio de Hacienda · Art. 156 CT</span>
+              </span>
+              <span id="calc-renta" class="font-semibold text-amber-400 self-start">-$0.00</span>
+            </div>
+            <div class="flex justify-between text-sm font-black text-white border-t border-slate-700/80 pt-1.5">
+              <span>NETO A COBRAR (SubTotal c/IVA − Renta):</span>
+              <span id="calc-total" class="text-emerald-400 text-base font-extrabold">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Notas del Contrato</label>
+          <textarea id="contrato-notas" rows="2" placeholder="Condiciones especiales, impresiones, acuerdos de pago..." 
+                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" data-close-modal class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Guardar Contrato</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- MODAL: COMPROBANTE / RECIBO IMPRIMIBLE -->
+  <!-- ==================================================== -->
+  <div id="modal-receipt" class="modal-container hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl my-6">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white no-print">
+        <h3 class="font-bold text-sm flex items-center gap-2">
+          <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i> Comprobante de Contrato
+        </h3>
+        <div class="flex items-center gap-2">
+          <button id="btn-print-receipt" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-4 h-4"></i> Imprimir / PDF
+          </button>
+          <button data-close-modal class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="receipt-content"></div>
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- TOAST NOTIFICACIONES -->
+  <!-- ==================================================== -->
+  <div id="toast" class="fixed bottom-16 md:bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition duration-300 pointer-events-none">
+    <div class="bg-slate-900 border border-slate-700 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold text-white">
+      <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+      <span id="toast-message">Mensaje</span>
+    </div>
+  </div>
+
+  <!-- Scripts de la Aplicación -->
+  <script src="./js/store.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
