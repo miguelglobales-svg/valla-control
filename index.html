@@ -740,3 +740,13 @@
   <script src="./js/app.js"></script>
 </body>
 </html>
+<script>
+  // Desinstala el Service Worker para evitar bloqueos de caché
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
