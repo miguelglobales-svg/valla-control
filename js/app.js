@@ -1209,13 +1209,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   }
 
-  function cleanPhoneForWa(phone) {
+ function cleanPhoneForWa(phone) {
   if (!phone) return "";
+  // Convertimos a String para evitar que colapse si Google Sheets devuelve un número
   let clean = String(phone).replace(/[^\d+]/g, "");
   if (clean.startsWith("+")) clean = clean.substring(1);
   // Si no tiene código de país, por defecto en El Salvador es 503
   if (clean.length === 8) clean = "503" + clean;
   return clean;
+}
 }
   function escapeHtml(str) {
     if (!str) return "";
