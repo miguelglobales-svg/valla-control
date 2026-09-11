@@ -1,4 +1,4 @@
-const CACHE_NAME = "vallas-control-v1";
+const CACHE_NAME = 'valla-control-v2';
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
