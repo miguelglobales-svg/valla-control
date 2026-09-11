@@ -1202,7 +1202,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function cleanPhoneForWa(phone) {
     if (!phone) return "";
-    let clean = phone.replace(/[^\d+]/g, "");
+   let clean = String(phone).replace(/[^\d+]/g, "");
     if (clean.startsWith("+")) clean = clean.substring(1);
     // Si no tiene código de país, por defecto en El Salvador es 503
     if (clean.length === 8) clean = "503" + clean;
