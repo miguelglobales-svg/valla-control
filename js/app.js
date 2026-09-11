@@ -1221,3 +1221,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carga inicial
   renderCurrentView();
 });
+// ==========================================
+// SINCRONIZACIÓN AUTOMÁTICA (PC Y CELULAR)
+// ==========================================
+
+// 1. Sincroniza automáticamente cada vez que abres o vuelves a la App
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    if (typeof syncWithSheets === "function") {
+      syncWithSheets(true);
+    }
+  }
+});
+
+// 2. Sincroniza automáticamente cada 30 segundos mientras la App esté abierta
+setInterval(() => {
+  if (navigator.onLine && typeof syncWithSheets === "function") {
+    syncWithSheets(true);
+  }
+}, 30000);
