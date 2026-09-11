@@ -2,27 +2,31 @@
  * APP: Controlador de Interfaz de Usuario y Lógica de Navegación
  */
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Inicialización de iconos Lucide si están disponibles
+document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Inicialización de iconos Lucide
   if (window.lucide) {
     window.lucide.createIcons();
-    document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Cargar datos locales primero
-  if (typeof loadLocalData === "function") await loadLocalData();
-  
-  // 2. Traer datos frescos de Google Sheets de inmediato al abrir la app
-  if (navigator.onLine && typeof syncWithSheets === "function") {
-    syncWithSheets(true); 
-  }
-});
   }
 
-  // Registrar Service Worker para PWA
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js")
-      .then(reg => console.log("Service Worker registrado con éxito:", reg.scope))
-      .catch(err => console.warn("Error al registrar Service Worker:", err));
+  // 2. Cargar datos locales guardados
+  if (typeof loadLocalData === "function") {
+    await loadLocalData();
   }
+
+  // 3. Traer datos en vivo de Google Sheets si hay internet
+  if (navigator.onLine && typeof syncWithSheets === "function") {
+    syncWithSheets(true);
+  }
+});
+
+// Desactivación/Remoción de Service Worker para evitar congelamiento de caché
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
 
   // Manejador del prompt de instalación de PWA
   let deferredPrompt = null;
