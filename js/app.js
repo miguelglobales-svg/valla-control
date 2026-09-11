@@ -1209,7 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   }
 
- function cleanPhoneForWa(phone) {
+  function cleanPhoneForWa(phone) {
   if (!phone) return "";
   // Convertimos a String para evitar que colapse si Google Sheets devuelve un número
   let clean = String(phone).replace(/[^\d+]/g, "");
