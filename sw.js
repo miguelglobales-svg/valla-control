@@ -1,4 +1,4 @@
-const CACHE_NAME = &#39;valla-control-v5&#39;
+javascript const CACHE_NAME = &#39;valla-control-v6&#39;
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
