@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="boardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Glow border -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#3b82f6" stroke-width="4" stroke-opacity="0.25"/>
+
+  <!-- Pillars / Postes de la Valla -->
+  <rect x="160" y="320" width="28" height="130" rx="8" fill="#475569" filter="url(#shadow)"/>
+  <rect x="324" y="320" width="28" height="130" rx="8" fill="#475569" filter="url(#shadow)"/>
+  <line x1="160" y1="360" x2="352" y2="400" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+  <line x1="160" y1="400" x2="352" y2="360" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Marco de la Valla -->
+  <rect x="64" y="96" width="384" height="230" rx="20" fill="#1e293b" stroke="#64748b" stroke-width="8" filter="url(#shadow)"/>
+
+  <!-- Pantalla / Cartel de la Valla -->
+  <rect x="80" y="112" width="352" height="198" rx="14" fill="url(#boardGrad)"/>
+
+  <!-- Contenido publicitario ilustrado -->
+  <!-- Montañas / Paisaje estilizado dentro del cartel -->
+  <path d="M 80 250 L 160 180 L 230 230 L 310 160 L 432 250 L 432 310 L 80 310 Z" fill="#1e40af" opacity="0.6"/>
+  <path d="M 140 310 L 230 220 L 320 310 Z" fill="#2563eb" opacity="0.8"/>
+  <circle cx="360" cy="160" r="28" fill="#fbbf24" opacity="0.9"/>
+
+  <!-- Focos / Luces superiores -->
+  <circle cx="140" cy="74" r="10" fill="#f8fafc"/>
+  <circle cx="256" cy="74" r="10" fill="#f8fafc"/>
+  <circle cx="372" cy="74" r="10" fill="#f8fafc"/>
+  
+  <line x1="140" y1="74" x2="140" y2="96" stroke="#64748b" stroke-width="6"/>
+  <line x1="256" y1="74" x2="256" y2="96" stroke="#64748b" stroke-width="6"/>
+  <line x1="372" y1="74" x2="372" y2="96" stroke="#64748b" stroke-width="6"/>
+
+  <!-- Haz de luz -->
+  <polygon points="125,84 155,84 195,140 85,140" fill="#ffffff" opacity="0.2"/>
+  <polygon points="241,84 271,84 311,140 201,140" fill="#ffffff" opacity="0.2"/>
+  <polygon points="357,84 387,84 427,140 317,140" fill="#ffffff" opacity="0.2"/>
+
+  <!-- Texto / Símbolo 'SV' o Estrella -->
+  <rect x="100" y="130" width="130" height="24" rx="6" fill="#ffffff" opacity="0.85"/>
+  <rect x="100" y="162" width="80" height="14" rx="4" fill="#93c5fd" opacity="0.75"/>
+</svg>
