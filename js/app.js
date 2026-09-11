@@ -1231,28 +1231,41 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCurrentView();
 });
 // ==========================================
-// SINCRONIZACIÓN AUTO-REFRESCO (PC Y CELULAR)
+// SINCRONIZACIÓN AUTOMÁTICA OBLIGATORIA
 // ==========================================
 
-async function autoSyncAndRender() {
-  if (navigator.onLine && typeof syncWithSheets === "function") {
-    // 1. Descarga los datos de Google Sheets
-    await syncWithSheets(true);
-    // 2. Fuerza el rediseño de la pantalla actual para mostrar los cambios de inmediato
-    if (typeof renderCurrentView === "function") {
-      renderCurrentView();
+async function forceAutoSync() {
+  if (!navigator.onLine) return;
+
+  // 1. Asegurar que la URL de Apps Script esté cargada desde localStorage
+  const scriptUrl = localStorage.getItem("valla_script_url");
+  if (!scriptUrl) return;
+
+  try {
+    // 2. Traer datos directamente desde Google Sheets
+    if (typeof fetchFromSheets === "function") {
+      await fetchFromSheets();
+      
+      // 3. Rediseñar la vista actual con los datos nuevos
+      if (typeof renderCurrentView === "function") {
+        renderCurrentView();
+      }
     }
+  } catch (err) {
+    console.warn("Auto-sync en segundo plano falló:", err);
   }
 }
 
-// Se ejecuta automáticamente al enfocar o abrir la App en el celular / PC
-window.addEventListener("focus", autoSyncAndRender);
+// Ejecutar automáticamente apenas abre la app
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(forceAutoSync, 1000);
+});
 
+// Ejecutar al volver a abrir la app o cambiar de pestaña
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
-    autoSyncAndRender();
+    forceAutoSync();
   }
 });
 
-// Revisa cambios en segundo plano cada 15 segundos mientras la App esté abierta
-setInterval(autoSyncAndRender, 15000);
+window.addEventListener("focus", forceAutoSync);
