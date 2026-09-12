@@ -141,9 +141,14 @@ class Store {
     }
   }
 
-  saveData(data = this.data) {
+saveData(data = this.data) {
+  this.data = data;
+  try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn("No se pudo guardar en almacenamiento local:", e);
   }
+}
 
   loadConfig() {
     const raw = localStorage.getItem(CONFIG_KEY);
