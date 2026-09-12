@@ -44,22 +44,18 @@ class ApiService {
   /**
    * Petición GET a Google Apps Script
    */
-  async getRequest(action = "getAllData") {
-    if (!this.hasValidUrl()) {
-      return { success: false, localOnly: true, message: "Modo Local: Sin URL de Google Apps Script" };
-    }
-
+async getRequest(action = "getAllData") {
+    if (!this.hasValidUrl()) return null;
     try {
-      const url = `${this.getScriptUrl()}?action=${encodeURIComponent(action)}&t=${Date.now()}`;
+      const timestamp = new Date().getTime();
+      const url = `${this.scriptUrl}?action=${action}&_t=${timestamp}`;
       const response = await fetch(url);
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      console.error("Error al obtener datos de Google Apps Script:", err);
-      return { success: false, error: err.toString() };
+      return await response.json();
+    } catch (error) {
+      console.error("Error en getRequest:", error);
+      return null;
     }
   }
-
   /**
    * Prueba de conexión con la hoja
    */
@@ -265,3 +261,17 @@ class ApiService {
 }
 
 window.api = new ApiService();
+
+// Sincronización automática periódica (Cada 30 segundos)
+setInterval(async () => {
+  if (navigator.onLine && typeof api !== "undefined") {
+    try {
+      const res = await api.syncAllData();
+      if (res && res.success && typeof renderCurrentView === "function") {
+        renderCurrentView();
+      }
+    } catch (e) {
+      console.warn("Sincronización periódica en espera...", e);
+    }
+  }
+}, 30000); // 30000 ms = 30 segundos
