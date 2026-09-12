@@ -77,6 +77,9 @@ class ApiService {
       const result = await this.getRequest("getAllData");
       if (result && result.success && result.data) {
         window.store.syncFromRemote(result.data);
+        if (typeof renderCurrentView === "function") {
+          renderCurrentView();
+        }
         return { success: true, data: result.data };
       }
       return result;
