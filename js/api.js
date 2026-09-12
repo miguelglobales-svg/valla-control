@@ -47,20 +47,25 @@ class ApiService {
 async getRequest(action = "getAllData") {
     if (!this.hasValidUrl()) return null;
     try {
-      const timestamp = new Date().getTime();
-      const url = `${this.scriptUrl}?action=${action}&_t=${timestamp}`;
-      const response = await fetch(url);
+      // Construcción limpia de la URL de Google Apps Script
+      const baseUrl = this.scriptUrl.trim();
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      const url = `${baseUrl}${separator}action=${action}&_t=${Date.now()}`;
+
+      const response = await fetch(url, {
+        method: "GET",
+        redirect: "follow"
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       return await response.json();
     } catch (error) {
       console.error("Error en getRequest:", error);
-      return null;
+      return { success: false, error: error.message };
     }
-  }
-  /**
-   * Prueba de conexión con la hoja
-   */
-  async ping() {
-    return await this.getRequest("ping");
   }
 
   /**
