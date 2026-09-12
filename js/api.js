@@ -32,7 +32,7 @@ class ApiService {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(data)
       });
-  hasValidUrl() {
+hasValidUrl() {
     return Boolean(this.scriptUrl && this.scriptUrl.trim().includes("script.google.com"));
   }
 
@@ -55,8 +55,9 @@ class ApiService {
       }
 
       const data = await response.json();
-      
-      if (data && (data.success || data.clientes || data.vallas || data.data)) {
+
+      // Si la respuesta trae datos válidos (success: true o arrays de clientes/vallas)
+      if (data && (data.success || data.clientes || data.vallas)) {
         return { success: true, data: data.data || data };
       }
 
@@ -67,6 +68,14 @@ class ApiService {
     }
   }
 
+  async ping() {
+    try {
+      const res = await this.getRequest("getAllData");
+      return res && res.success === true;
+    } catch (e) {
+      return false;
+    }
+  }
   async ping() {
     const res = await this.getRequest("getAllData");
     return res && res.success !== false;
