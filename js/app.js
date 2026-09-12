@@ -2,34 +2,37 @@
  * APP: Controlador de Interfaz de Usuario y Lógica de Navegación
  */
 
-// Inicialización directa de la App
+// Inicialización directa y segura de la App
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Renderizar iconos de interfaz
-  if (window.lucide) {
+  // 1. Inicializar iconos visuales si existen
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
     window.lucide.createIcons();
   }
 
-  // 2. Cargar datos en vivo directamente desde la API
-  await cargarDatosEnVivo();
-});
-
-// Función para obtener siempre los datos frescos desde Google Sheets
-async function cargarDatosEnVivo() {
-  mostrarCargando(true);
-  try {
-    if (typeof syncWithSheets === "function") {
-      // Fuerza la descarga completa desde Google Sheets
-      await syncWithSheets(false);
-    }
-  } catch (error) {
-    console.error("Error al cargar datos en vivo:", error);
-  } finally {
-    mostrarCargando(false);
-    if (typeof renderCurrentView === "function") {
-      renderCurrentView();
+  // 2. Cargar datos locales primero si la función existe
+  if (typeof loadLocalData === "function") {
+    try {
+      await loadLocalData();
+    } catch (e) {
+      console.warn("Error al cargar datos locales:", e);
     }
   }
-}
+
+  // 3. Forzar actualización en vivo desde Google Sheets de forma segura
+  if (navigator.onLine && typeof syncWithSheets === "function") {
+    try {
+      await syncWithSheets(false);
+    } catch (e) {
+      console.warn("Error al sincronizar con Sheets:", e);
+    }
+  }
+
+  // 4. Dibujar la pantalla
+  if (typeof renderCurrentView === "function") {
+    renderCurrentView();
+  }
+});
+
 
 // Función auxiliar para mostrar un indicador visual de carga (opcional)
 function mostrarCargando(activar) {
