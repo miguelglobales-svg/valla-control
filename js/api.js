@@ -33,16 +33,16 @@ class ApiService {
         body: JSON.stringify(data)
       });
 hasValidUrl() {
-    return this.scriptUrl && this.scriptUrl.includes("script.google.com");
+    return Boolean(this.scriptUrl && this.scriptUrl.trim().includes("script.google.com"));
   }
 
   async getRequest(action = "getAllData") {
-    if (!this.hasValidUrl()) return { success: false, error: "URL inválida" };
+    if (!this.hasValidUrl()) return { success: false, error: "URL no configurada" };
     
     try {
-      const cleanUrl = this.scriptUrl.trim();
-      const separator = cleanUrl.includes("?") ? "&" : "?";
-      const finalUrl = `${cleanUrl}${separator}action=${action}`;
+      const baseUrl = this.scriptUrl.trim();
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      const finalUrl = `${baseUrl}${separator}action=${action}`;
 
       const response = await fetch(finalUrl, {
         method: "GET",
@@ -51,10 +51,16 @@ hasValidUrl() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP Error ${response.status}`);
       }
 
       const data = await response.json();
+      
+      // Si el JSON viene directamente con datos de la hoja de cálculo
+      if (data && (data.success || data.clientes || data.vallas || data.data)) {
+        return { success: true, data: data.data || data };
+      }
+
       return data;
     } catch (error) {
       console.error("Error en getRequest:", error);
@@ -63,11 +69,9 @@ hasValidUrl() {
   }
 
   async ping() {
-    return await this.getRequest("getAllData");
+    const res = await this.getRequest("getAllData");
+    return res && res.success !== false;
   }
-  async syncAllData() {
-    if (!this.hasValidUrl()) return { success: false, localOnly: true };
-    this.isSyncing = true;
     try {
       const result = await this.getRequest("getAllData");
       if (result && result.success && result.data) {
