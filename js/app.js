@@ -2,30 +2,41 @@
  * APP: Controlador de Interfaz de Usuario y Lógica de Navegación
  */
 
+// Inicialización directa de la App
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Inicialización de iconos Lucide
+  // 1. Renderizar iconos de interfaz
   if (window.lucide) {
     window.lucide.createIcons();
   }
 
-  // 2. Cargar datos locales guardados
-  if (typeof loadLocalData === "function") {
-    await loadLocalData();
-  }
-
-  // 3. Traer datos en vivo de Google Sheets si hay internet
-  if (navigator.onLine && typeof syncWithSheets === "function") {
-    syncWithSheets(true);
-  }
+  // 2. Cargar datos en vivo directamente desde la API
+  await cargarDatosEnVivo();
 });
 
-// Desactivación/Remoción de Service Worker para evitar congelamiento de caché
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    for (let registration of registrations) {
-      registration.unregister();
+// Función para obtener siempre los datos frescos desde Google Sheets
+async function cargarDatosEnVivo() {
+  mostrarCargando(true);
+  try {
+    if (typeof syncWithSheets === "function") {
+      // Fuerza la descarga completa desde Google Sheets
+      await syncWithSheets(false);
     }
-  });
+  } catch (error) {
+    console.error("Error al cargar datos en vivo:", error);
+  } finally {
+    mostrarCargando(false);
+    if (typeof renderCurrentView === "function") {
+      renderCurrentView();
+    }
+  }
+}
+
+// Función auxiliar para mostrar un indicador visual de carga (opcional)
+function mostrarCargando(activar) {
+  const loader = document.getElementById("loading-spinner");
+  if (loader) {
+    loader.style.display = activar ? "flex" : "none";
+  }
 }
 
   // Manejador del prompt de instalación de PWA
@@ -1230,9 +1241,7 @@ function cleanPhoneForWa(phone) {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
-
-  // Carga inicial
-  renderCurrentView();
+  
 });
 // ==========================================
 // AUTO-SINCRONIZACIÓN USANDO EL BOTÓN REAL
