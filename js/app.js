@@ -2,32 +2,52 @@
  * APP: Controlador de Interfaz de Usuario y Lógica de Navegación
  */
 
+// Inicialización directa y sincronizada de la App
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.lucide && typeof window.lucide.createIcons === "function") {
     window.lucide.createIcons();
   }
 
+  // 1. Cargar datos locales primero para render rápido
   if (typeof loadLocalData === "function") {
     try {
       await loadLocalData();
     } catch (e) {
-      console.warn("Error local:", e);
+      console.warn("Error cargando datos locales:", e);
     }
   }
 
-  if (navigator.onLine && typeof syncWithSheets === "function") {
-    try {
-      await syncWithSheets(false);
-    } catch (e) {
-      console.warn("Error sync:", e);
-    }
-  }
-
+  // Dibujar vista inicial mientras conecta
   if (typeof renderCurrentView === "function") {
     renderCurrentView();
   }
+
+  // 2. Traer datos frescos de Google Sheets y rediseñar automáticamente
+  if (navigator.onLine && typeof syncWithSheets === "function") {
+    try {
+      await syncWithSheets(true);
+      if (typeof renderCurrentView === "function") {
+        renderCurrentView(); // Redibuja la interfaz con los datos nuevos en vivo
+      }
+    } catch (e) {
+      console.warn("Error en la auto-sincronización:", e);
+    }
+  }
 });
 
+// 3. Sincronizar automáticamente al volver a la app (al cambiar entre pestañas o apps)
+window.addEventListener("focus", async () => {
+  if (navigator.onLine && typeof syncWithSheets === "function") {
+    try {
+      await syncWithSheets(true);
+      if (typeof renderCurrentView === "function") {
+        renderCurrentView();
+      }
+    } catch (e) {
+      console.warn("Error sincronizando al enfocar:", e);
+    }
+  }
+});
 // Función auxiliar para mostrar un indicador visual de carga (opcional)
 function mostrarCargando(activar) {
   const loader = document.getElementById("loading-spinner");
