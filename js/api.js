@@ -32,7 +32,7 @@ class ApiService {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(data)
       });
-hasValidUrl() {
+  hasValidUrl() {
     return Boolean(this.scriptUrl && this.scriptUrl.trim().includes("script.google.com"));
   }
 
@@ -56,7 +56,6 @@ hasValidUrl() {
 
       const data = await response.json();
       
-      // Si el JSON viene directamente con datos de la hoja de cálculo
       if (data && (data.success || data.clientes || data.vallas || data.data)) {
         return { success: true, data: data.data || data };
       }
@@ -68,6 +67,10 @@ hasValidUrl() {
     }
   }
 
+  async ping() {
+    const res = await this.getRequest("getAllData");
+    return res && res.success !== false;
+  }
   async ping() {
     const res = await this.getRequest("getAllData");
     return res && res.success !== false;
