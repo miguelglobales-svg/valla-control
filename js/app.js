@@ -2,37 +2,31 @@
  * APP: Controlador de Interfaz de Usuario y Lógica de Navegación
  */
 
-// Inicialización directa y segura de la App
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Inicializar iconos visuales si existen
   if (window.lucide && typeof window.lucide.createIcons === "function") {
     window.lucide.createIcons();
   }
 
-  // 2. Cargar datos locales primero si la función existe
   if (typeof loadLocalData === "function") {
     try {
       await loadLocalData();
     } catch (e) {
-      console.warn("Error al cargar datos locales:", e);
+      console.warn("Error local:", e);
     }
   }
 
-  // 3. Forzar actualización en vivo desde Google Sheets de forma segura
   if (navigator.onLine && typeof syncWithSheets === "function") {
     try {
       await syncWithSheets(false);
     } catch (e) {
-      console.warn("Error al sincronizar con Sheets:", e);
+      console.warn("Error sync:", e);
     }
   }
 
-  // 4. Dibujar la pantalla
   if (typeof renderCurrentView === "function") {
     renderCurrentView();
   }
 });
-
 
 // Función auxiliar para mostrar un indicador visual de carga (opcional)
 function mostrarCargando(activar) {
@@ -1234,18 +1228,16 @@ function cleanPhoneForWa(phone) {
   if (clean.length === 8) clean = "503" + clean;
   return clean;
 }
-  
-  function escapeHtml(str) {
-    if (!str) return "";
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-  
-});
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 // ==========================================
 // AUTO-SINCRONIZACIÓN USANDO EL BOTÓN REAL
 // ==========================================
