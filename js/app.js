@@ -1258,32 +1258,37 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-// ==========================================
-// AUTO-SINCRONIZACIÓN USANDO EL BOTÓN REAL
-// ==========================================
+// ===============================================
+// AUTO-SINCRONIZACIÓN DIRECTA (SIN CLICS SIMULADOS)
+// ===============================================
 
 async function ejecutarSincronizacionTotal() {
   if (!navigator.onLine) return;
-  
-  // Buscamos el botón real de sincronizar en el DOM
-  const btnSync = document.getElementById("btn-sync") || document.querySelector("[onclick*='syncWithSheets']");
-  
-  if (btnSync) {
-    // Si el botón existe en la vista actual, simulamos el clic físico
-    btnSync.click();
-  } else if (typeof syncWithSheets === "function") {
-    // Si no está el botón visible en pantalla, ejecutamos la función directa sin silenciar
-    await syncWithSheets(false);
-    if (typeof renderCurrentView === "function") renderCurrentView();
+
+  try {
+    // Llama directamente al ApiService sin simular clics
+    if (typeof api !== "undefined" && typeof api.syncAllData === "function") {
+      const res = await api.syncAllData();
+      if (res && res.success && typeof renderCurrentView === "function") {
+        renderCurrentView();
+      }
+    } else if (typeof syncWithSheets === "function") {
+      await syncWithSheets(true);
+      if (typeof renderCurrentView === "function") {
+        renderCurrentView();
+      }
+    }
+  } catch (e) {
+    console.warn("Error en auto-sincronización:", e);
   }
 }
 
-// 1. Ejecutar automáticamente 1.5 segundos después de abrir la PWA
+// 1. Sincronizar automáticamente 1.5 segundos después de abrir la app
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(ejecutarSincronizacionTotal, 1500);
 });
 
-// 2. Ejecutar cada vez que el celular/PC vuelva a la app (desbloquear pantalla o cambiar pestaña)
+// 2. Sincronizar al volver a la app (desbloquear pantalla o cambiar de pestaña)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     ejecutarSincronizacionTotal();
