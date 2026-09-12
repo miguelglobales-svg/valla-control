@@ -1259,36 +1259,37 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 // ===============================================
-// AUTO-SINCRONIZACIÓN DIRECTA (SIN CLICS SIMULADOS)
+// AUTO-SINCRONIZACIÓN Y BOTÓN MANUAL SEGURO
 // ===============================================
 
 async function ejecutarSincronizacionTotal() {
   if (!navigator.onLine) return;
 
   try {
-    // Llama directamente al ApiService sin simular clics
-    if (typeof api !== "undefined" && typeof api.syncAllData === "function") {
-      const res = await api.syncAllData();
-      if (res && res.success && typeof renderCurrentView === "function") {
-        renderCurrentView();
+    // 1. Intentar sincronizar usando window.api si existe
+    if (window.api && typeof window.api.syncAllData === "function") {
+      const res = await window.api.syncAllData();
+      if (res && res.success && typeof window.renderCurrentView === "function") {
+        window.renderCurrentView();
       }
-    } else if (typeof syncWithSheets === "function") {
-      await syncWithSheets(true);
-      if (typeof renderCurrentView === "function") {
-        renderCurrentView();
+    } 
+    // 2. Si no, intentar usando la función global syncWithSheets
+    else if (typeof window.syncWithSheets === "function") {
+      await window.syncWithSheets(true);
+      if (typeof window.renderCurrentView === "function") {
+        window.renderCurrentView();
       }
     }
   } catch (e) {
-    console.warn("Error en auto-sincronización:", e);
+    console.warn("Error en sincronización:", e);
   }
 }
 
-// 1. Sincronizar automáticamente 1.5 segundos después de abrir la app
+// Escuchadores de eventos para sincronización automática
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(ejecutarSincronizacionTotal, 1500);
 });
 
-// 2. Sincronizar al volver a la app (desbloquear pantalla o cambiar de pestaña)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     ejecutarSincronizacionTotal();
