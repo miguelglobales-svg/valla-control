@@ -32,40 +32,39 @@ class ApiService {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(data)
       });
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      console.error("Error en petición a Google Apps Script:", err);
-      return { success: false, error: err.toString() };
-    }
+hasValidUrl() {
+    return this.scriptUrl && this.scriptUrl.includes("script.google.com");
   }
 
-  /**
-   * Petición GET a Google Apps Script
-   */
-async getRequest(action = "getAllData") {
-    if (!this.hasValidUrl()) return null;
+  async getRequest(action = "getAllData") {
+    if (!this.hasValidUrl()) return { success: false, error: "URL inválida" };
+    
     try {
-      const baseUrl = this.scriptUrl.trim();
-      const url = baseUrl.includes("?") 
-        ? `${baseUrl}&action=${action}` 
-        : `${baseUrl}?action=${action}`;
+      const cleanUrl = this.scriptUrl.trim();
+      const separator = cleanUrl.includes("?") ? "&" : "?";
+      const finalUrl = `${cleanUrl}${separator}action=${action}`;
 
-      const response = await fetch(url, {
+      const response = await fetch(finalUrl, {
         method: "GET",
+        mode: "cors",
         redirect: "follow"
       });
 
-      return await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error("Error en getRequest:", error);
       return { success: false, error: error.message };
     }
   }
-  /**
-   * Sincronización completa con Google Sheets
-   */
+
+  async ping() {
+    return await this.getRequest("getAllData");
+  }
   async syncAllData() {
     if (!this.hasValidUrl()) return { success: false, localOnly: true };
     this.isSyncing = true;
