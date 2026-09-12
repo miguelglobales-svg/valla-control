@@ -46,7 +46,6 @@ hasValidUrl() {
 
       const response = await fetch(finalUrl, {
         method: "GET",
-        mode: "cors",
         redirect: "follow"
       });
 
@@ -56,7 +55,7 @@ hasValidUrl() {
 
       const data = await response.json();
 
-      // Si la respuesta trae datos válidos (success: true o arrays de clientes/vallas)
+      // Formatear respuesta de lectura
       if (data && (data.success || data.clientes || data.vallas)) {
         return { success: true, data: data.data || data };
       }
@@ -68,26 +67,49 @@ hasValidUrl() {
     }
   }
 
-  async ping() {
+  async postRequest(payload) {
+    if (!this.hasValidUrl()) return { success: false, error: "URL no configurada" };
+
     try {
-      const res = await this.getRequest("getAllData");
-      return res && res.success === true;
-    } catch (e) {
-      return false;
+      const baseUrl = this.scriptUrl.trim();
+      
+      // Se utiliza text/plain en fetch para evitar preflight CORS en Google Apps Script
+      const response = await fetch(baseUrl, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload),
+        redirect: "follow"
+      });
+
+      const resText = await response.text();
+      try {
+        return JSON.parse(resText);
+      } catch (e) {
+        return { success: true, text: resText };
+      }
+    } catch (error) {
+      console.error("Error en postRequest:", error);
+      return { success: false, error: error.message };
     }
   }
+
   async ping() {
     const res = await this.getRequest("getAllData");
-    return res && res.success !== false;
+    return Boolean(res && (res.success || (res.data && (res.data.clientes || res.data.vallas))));
   }
-  async ping() {
-    const res = await this.getRequest("getAllData");
-    return res && res.success !== false;
-  }
+
+  async syncAllData() {
+    if (!this.hasValidUrl()) return { success: false, localOnly: true };
+    this.isSyncing = true;
     try {
       const result = await this.getRequest("getAllData");
       if (result && result.success && result.data) {
-        window.store.syncFromRemote(result.data);
+        if (window.store && typeof window.store.syncFromRemote === "function") {
+          window.store.syncFromRemote(result.data);
+        }
         if (typeof renderCurrentView === "function") {
           renderCurrentView();
         }
@@ -98,26 +120,6 @@ hasValidUrl() {
       this.isSyncing = false;
     }
   }
-
-  /**
-   * Guardar o actualizar cliente
-   */
-  async saveCliente(cliente) {
-    // Guardar primero en el store local para respuesta instantánea (Optimistic UI)
-    const localSaved = window.store.saveCliente(cliente);
-
-    if (this.hasValidUrl()) {
-      this.postRequest({
-        action: "saveCliente",
-        data: localSaved
-      }).then(res => {
-        if (!res.success) console.warn("No se pudo sincronizar cliente en Google Sheets:", res.error);
-      });
-    }
-
-    return localSaved;
-  }
-
   /**
    * Eliminar cliente
    */
